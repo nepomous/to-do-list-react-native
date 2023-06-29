@@ -9,7 +9,14 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { FIRESTORE_DB } from "../../firebaseConfig";
-import { addDoc, collection, onSnapshot } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  updateDoc,
+} from "firebase/firestore";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Entypo } from "@expo/vector-icons";
 
@@ -28,7 +35,6 @@ const List: React.FC = ({ navigation }: any) => {
 
     const subscriber = onSnapshot(todoRef, {
       next: (snapshot) => {
-        console.log("UPDATED?");
         const todos: Todo[] = [];
         snapshot.docs.forEach((doc) => {
           todos.push({
@@ -47,20 +53,27 @@ const List: React.FC = ({ navigation }: any) => {
       title: todo,
       done: false,
     });
-    console.log("add Todo?", doc);
     setTodo("");
   };
 
   const renderTodo = ({ item }: any) => {
-    const toggleDone = async () => {};
+    const ref = doc(FIRESTORE_DB, `todos/${item.id}`);
 
-    const deleteItem = async () => {};
+    const toggleDone = async () => {
+      updateDoc(ref, { done: !item.done });
+    };
+
+    const deleteItem = async () => {
+      deleteDoc(ref);
+    };
     return (
-      <View>
-        <TouchableOpacity onPress={toggleDone}>
-          {item.done && <Ionicons name="md-checkmark-circle" />}
-          {!item.done && <Entypo name="circle" size={24} color="black" />}
-          <Text>{item.title}</Text>
+      <View style={styles.todoContainer}>
+        <TouchableOpacity style={styles.todo} onPress={toggleDone}>
+          {item.done && (
+            <Ionicons name="md-checkmark-circle" size={32} color="green" />
+          )}
+          {!item.done && <Entypo name="circle" size={32} color="black" />}
+          <Text style={styles.todoText}>{item.title}</Text>
         </TouchableOpacity>
         <Ionicons
           name="trash-bin-outline"
@@ -96,11 +109,6 @@ const List: React.FC = ({ navigation }: any) => {
           />
         </View>
       )}
-      {/* <View>
-        {todos.map((todo) => (
-          <Text key={todo.id}>{todo.title}</Text>
-        ))}
-      </View> */}
     </View>
   );
 };
@@ -123,5 +131,21 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     padding: 10,
     backgroundColor: "#fff",
+  },
+  todoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 10,
+    marginVertical: 4,
+  },
+  todoText: {
+    flex: 1,
+    paddingHorizontal: 4,
+  },
+  todo: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
   },
 });
